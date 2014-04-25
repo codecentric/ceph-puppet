@@ -8,7 +8,8 @@ class ceph (
     $host_ipaddress = '192.15.2.111',
     $hostname = 'initcephmon',
   ){
-
+  include ceph::mon
+  include ceph::firstmon
   Exec {
     path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
   }
@@ -32,19 +33,28 @@ class ceph (
   }
 
   apt::source { 'radosgw-apache2':
-    location => 'http://gitbuilder.ceph.com/apache2-deb-precise-x86_64-basic/ref/master/',
+    location => 'http://gitbuilder.ceph.com/apache2-deb-quantal-x86_64-basic/ref/master/',
   }
 
   apt::source { 'radosgw-fastcgi':
-    location => 'http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-precise-x86_64-basic/ref/master/',
+    location => 'http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-quantal-x86_64-basic/ref/master/',
   }
+
+  # update and source installation
+  exec { "apt-update":
+	command	=> "/usr/bin/apt-get update",
+	require	=> [
+		Apt::Source['ceph'],
+		Apt::Source['radosgw-apache2'],
+	        Apt::Source['radosgw-fastcgi'],
+	]
+ }
 
   package { 'ceph':
     ensure   => installed,
-    require  => [
-        Apt::Source['ceph'],
-        Apt::Source['radosgw-apache2'],
-        Apt::Source['radosgw-fastcgi'],
-      ],
+    require  => Exec['apt-update'],
   }
+
+  Class['ceph'] -> Class['ceph::mon'] -> Class['ceph::firstmon']
+  
 }

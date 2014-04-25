@@ -18,7 +18,7 @@ define ceph::osd(
   }
 
   exec{"disk-activate-${directory}":
-    command  => "ceph-disk activate --activate-key /tmp/files/ceph.client.admin.keyring ${directory}",
+    command  => "ceph-disk activate ${directory}",
     require  => Exec["disk-prepare-${directory}"],
   }
 
