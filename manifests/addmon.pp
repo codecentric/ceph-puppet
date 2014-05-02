@@ -1,6 +1,6 @@
 class ceph::addmon (
-    $monid,
-    $monipaddress,
+    $monid = "hostname",
+    $monipaddress = "192.168.1.1",
     $monport = '6789',
     $tmpdir = '/tmp/addmon',
   ){

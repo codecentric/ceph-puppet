@@ -20,6 +20,10 @@ define ceph::osd(
   exec{"disk-activate-${directory}":
     command  => "ceph-disk activate ${directory}",
     require  => Exec["disk-prepare-${directory}"],
+#    notify   => Exec['restart'],
   }
 
+#  exec{"restart":
+#    command  => "/sbin/service ceph restart",
+#  }
 }

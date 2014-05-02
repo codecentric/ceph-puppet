@@ -7,9 +7,15 @@ class ceph (
     $network_interface = 'eth0',
     $host_ipaddress = '192.15.2.111',
     $hostname = 'initcephmon',
+    $firstmon = true,
   ){
-  include ceph::mon
-  include ceph::firstmon
+#  include ceph::mon
+  
+  if $firstmon == true {
+	include ceph::mon
+  	include ceph::firstmon
+  }
+  
   Exec {
     path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
   }
@@ -55,6 +61,11 @@ class ceph (
     require  => Exec['apt-update'],
   }
 
-  Class['ceph'] -> Class['ceph::mon'] -> Class['ceph::firstmon']
-  
+  if $firstmon == true {
+  	Class['ceph'] -> Class['ceph::mon'] -> Class['ceph::firstmon']
+  }
+  elsif $firstmon == false {
+	Class['ceph'] -> Class['ceph::addmon']
+  }
+
 }
