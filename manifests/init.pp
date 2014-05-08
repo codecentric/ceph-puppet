@@ -1,21 +1,21 @@
+#
 class ceph (
-    $fsid = 'a49812c5-9873-47c8-9983-5b062454abce',
-    $public_net = '172.16.0.0/24',
-#    $release = 'cuttlefish',
-    $release = 'emperor',
     $cluster_id = 'ceph',
+    $firstmonflag = true,
+    $firstmonip = '172.16.0.32',
+    $fsid = 'a49812c5-9873-47c8-9983-5b062454abce',
     $network_interface = 'eth0',
-    $host_ipaddress = '192.15.2.111',
-    $hostname = 'initcephmon',
-    $firstmon = true,
-  ){
-#  include ceph::mon
-  
-  if $firstmon == true {
-	include ceph::mon
-  	include ceph::firstmon
+    $public_net = '172.16.0.0/24',
+    $release = 'emperor',
+){
+
+  if $firstmonflag == true {
+    include 'ceph::firstmon'
   }
-  
+  elsif $firstmonflag == false {
+    include 'ceph::addmon'
+  }
+
   Exec {
     path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
   }
@@ -47,25 +47,25 @@ class ceph (
   }
 
   # update and source installation
-  exec { "apt-update":
-	command	=> "/usr/bin/apt-get update",
-	require	=> [
-		Apt::Source['ceph'],
-		Apt::Source['radosgw-apache2'],
-	        Apt::Source['radosgw-fastcgi'],
-	]
- }
+  exec { 'apt-update':
+    command  => '/usr/bin/apt-get update',
+    require  => [
+      Apt::Source['ceph'],
+      Apt::Source['radosgw-apache2'],
+      Apt::Source['radosgw-fastcgi'],
+    ],
+  }
 
   package { 'ceph':
     ensure   => installed,
     require  => Exec['apt-update'],
   }
 
-  if $firstmon == true {
-  	Class['ceph'] -> Class['ceph::mon'] -> Class['ceph::firstmon']
+  if $firstmonflag == true {
+    Class['ceph'] -> Class['ceph::firstmon']
   }
-  elsif $firstmon == false {
-	Class['ceph'] -> Class['ceph::addmon']
+  elsif $firstmonflag == false {
+    Class['ceph'] -> Class['ceph::addmon']
   }
 
 }

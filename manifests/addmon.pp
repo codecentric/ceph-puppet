@@ -1,21 +1,54 @@
+#
 class ceph::addmon (
-    $monid = "hostname",
-    $monipaddress = "192.168.1.1",
     $monport = '6789',
     $tmpdir = '/tmp/addmon',
-  ){
+){
+
+  include '::ceph'
 
   Exec {
     path => [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ],
   }
 
-  file { "/var/lib/ceph/mon/ceph-${monid}":
+  package { 'sshpass':
+    ensure   => installed,
+  }
+
+  exec { 'copy-ceph.conf':
+    command  => "sshpass -p 'toor' rsync -e 'ssh -o StrictHostKeyChecking=no' root@${ceph::firstmonip}:/etc/ceph/ceph.conf /etc/ceph/ceph.conf",
+    creates  => '/etc/ceph/ceph.conf',
+  }
+
+  file{'/etc/ceph/ceph.conf':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    require => Exec['copy-ceph.conf'],
+  }
+
+  exec { 'copy-ceph.client.admin.keyring':
+    command  => "sshpass -p 'toor' rsync -e 'ssh -o StrictHostKeyChecking=no' root@${ceph::firstmonip}:/etc/ceph/ceph.client.admin.keyring /etc/ceph/ceph.client.admin.keyring",
+    creates  => '/etc/ceph/ceph.client.admin.keyring',
+  }
+
+  file{'/etc/ceph/ceph.client.admin.keyring':
+    ensure  => present,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0644',
+    require => Exec['copy-ceph.client.admin.keyring'],
+  }
+
+  file { "/var/lib/ceph/mon/ceph-${hostname}":
     ensure  => directory,
+    require => File['/etc/ceph/ceph.client.admin.keyring'],
   }
 
   file { "create-${tmpdir}":
     ensure  => directory,
     path    => $tmpdir,
+    require => File["/var/lib/ceph/mon/ceph-${hostname}"],
   }
 
   exec { 'retrieve-keyring':
@@ -31,23 +64,23 @@ class ceph::addmon (
   }
 
   exec { 'prepare-data-directory':
-    command  => "/usr/bin/ceph-mon -i ${monid} --mkfs --monmap ${tmpdir}/map --keyring ${tmpdir}/keyring",
+    command  => "/usr/bin/ceph-mon -i ${hostname} --mkfs --monmap ${tmpdir}/map --keyring ${tmpdir}/keyring",
     require  => [
       Exec['retrieve-keyring'],
       Exec['retrieve-map'],
-      File["/var/lib/ceph/mon/ceph-${monid}"],
+      File["/var/lib/ceph/mon/ceph-${hostname}"],
       ],
     user     => 'root',
 #    unless
   }
 
   exec { 'monitor-address-binding':
-    command  => "/usr/bin/ceph-mon -i ${monid} --public-addr ${monipaddress}:${monport}",
+    command  => "/usr/bin/ceph-mon -i ${hostname} --public-addr ${ipaddress}:${monport}",
     require  => Exec['prepare-data-directory'],
   }
 
   exec { 'add-monitor':
-    command  => "/usr/bin/ceph mon add ${monid} ${monipaddress}:${monport}",
+    command  => "/usr/bin/ceph mon add ${hostname} ${ipaddress}:${monport}",
     require  => Exec['monitor-address-binding'],
   }
 
@@ -57,9 +90,22 @@ class ceph::addmon (
   }
 
   exec { 'start-monitor':
-    command => "start ceph-mon id=${monid}",
-    require  => Exec["pkill-ceph"],
+    command  => "start ceph-mon id=${hostname}",
+    require  => Exec['pkill-ceph'],
   }
 
-  # remove tmpdir
+  ceph::osd {'share3':
+    directory  => '/var/local/ceph3',
+    require    => [
+                        Exec['start-monitor'],
+                ],
+  }
+
+  ceph::osd {'share4':
+    directory  => '/var/local/ceph4',
+    require    => [
+                        Exec['start-monitor'],
+                ],
+  }
+
 }

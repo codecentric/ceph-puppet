@@ -1,3 +1,4 @@
+#
 define ceph::osd(
   $directory,
   $type = 'ext4'

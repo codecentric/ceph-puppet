@@ -1,6 +1,6 @@
 fsid = <%= scope.lookupvar('ceph::fsid') %>
 mon initial members = <%= @hostname %>
-mon host = <%= scope.lookupvar('ceph::host_ipaddress') %>
+mon host = <%= scope.lookupvar('ceph::ipaddress') %>
 public network = <%= scope.lookupvar('ceph::public_net') %> 
 auth cluster required = cephx
 auth service required = cephx
