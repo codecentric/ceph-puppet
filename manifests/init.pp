@@ -4,7 +4,6 @@ class ceph (
     $firstmonflag = true,
     $firstmonip = '172.16.0.32',
     $fsid = 'a49812c5-9873-47c8-9983-5b062454abce',
-    $network_interface = 'eth0',
     $public_net = '172.16.0.0/24',
     $release = 'emperor',
 ){

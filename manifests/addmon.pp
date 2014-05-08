@@ -71,7 +71,6 @@ class ceph::addmon (
       File["/var/lib/ceph/mon/ceph-${hostname}"],
       ],
     user     => 'root',
-#    unless
   }
 
   exec { 'monitor-address-binding':

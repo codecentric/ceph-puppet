@@ -81,6 +81,8 @@ class ceph::firstmon (
 #   require  => Exec['populate-monitor'],
 # }
 
+# Hier scheind das Problem zu liegen....
+
 # Start the monitor
   exec{'start-monitor':
     command  => "start ceph-mon id=${hostname}",
