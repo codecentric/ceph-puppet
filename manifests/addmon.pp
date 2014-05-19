@@ -17,6 +17,7 @@ class ceph::addmon (
   exec { 'copy-ceph.conf':
     command  => "sshpass -p 'toor' rsync -e 'ssh -o StrictHostKeyChecking=no' root@${ceph::firstmonip}:/etc/ceph/ceph.conf /etc/ceph/ceph.conf",
     creates  => '/etc/ceph/ceph.conf',
+    require  => Package['sshpass'],
   }
 
   file{'/etc/ceph/ceph.conf':
@@ -30,6 +31,7 @@ class ceph::addmon (
   exec { 'copy-ceph.client.admin.keyring':
     command  => "sshpass -p 'toor' rsync -e 'ssh -o StrictHostKeyChecking=no' root@${ceph::firstmonip}:/etc/ceph/ceph.client.admin.keyring /etc/ceph/ceph.client.admin.keyring",
     creates  => '/etc/ceph/ceph.client.admin.keyring',
+    require  => File['/etc/ceph/ceph.conf'],
   }
 
   file{'/etc/ceph/ceph.client.admin.keyring':
@@ -65,6 +67,7 @@ class ceph::addmon (
 
   exec { 'prepare-data-directory':
     command  => "/usr/bin/ceph-mon -i ${hostname} --mkfs --monmap ${tmpdir}/map --keyring ${tmpdir}/keyring",
+#     command  => "/usr/bin/ceph-mon -i ${hostname} --mkfs --monmap ${tmpdir}/map --keyring /etc/ceph/ceph.client.admin.keyring",
     require  => [
       Exec['retrieve-keyring'],
       Exec['retrieve-map'],

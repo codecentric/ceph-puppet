@@ -1,6 +1,6 @@
-# Anleitung: http://ceph.com/docs/master/install/manual-deployment/#monitor-bootstrapping
 class ceph::firstmon (
 ){
+# Anleitung: http://ceph.com/docs/master/install/manual-deployment/#monitor-bootstrapping
   include '::ceph'
 
   Exec{
@@ -35,6 +35,7 @@ class ceph::firstmon (
   exec{'add-admin-to-monitor-keyring':
     command => "ceph-authtool ${mon_keyring} --import-keyring ${admin_keyring}",
     require => Exec['create-keyring-admin'],
+    onlyif  => "ceph mon_status|egrep -v '\"state\": \"(leader|peon)\"'",
   }
 
   file{'ceph.client.admin.keyring':
@@ -88,7 +89,7 @@ class ceph::firstmon (
     command  => "start ceph-mon id=${hostname}",
 #    require  => Exec['restart'],
     require  => Exec['populate-monitor'],
-#    unless   => "status ceph-mon id=${hostname}",
+    unless   => "status ceph-mon id=${hostname}",
   }
 
 # Add first osd
