@@ -35,7 +35,7 @@ class ceph::firstmon (
   exec{'add-admin-to-monitor-keyring':
     command => "ceph-authtool ${mon_keyring} --import-keyring ${admin_keyring}",
     require => Exec['create-keyring-admin'],
-    onlyif  => "ceph mon_status|egrep -v '\"state\": \"(leader|peon)\"'",
+#    onlyif  => "ceph mon_status|egrep -v '\"state\": \"(leader|peon)\"'",
   }
 
   file{'ceph.client.admin.keyring':
@@ -93,13 +93,13 @@ class ceph::firstmon (
   }
 
 # Add first osd
+if ("[ ! -d '/var/local/ceph1' ]") {
   ceph::osd {'share1':
     directory  => '/var/local/ceph1',
     require    => [
                         Exec['start-monitor'],
                 ],
   }
-
 # Add second osd
   ceph::osd {'share2':
     directory  => '/var/local/ceph2',
@@ -107,5 +107,5 @@ class ceph::firstmon (
                         Exec['start-monitor'],
                 ],
   }
-
+}
 }
